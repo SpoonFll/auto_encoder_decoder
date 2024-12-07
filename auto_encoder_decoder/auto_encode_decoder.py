@@ -33,7 +33,32 @@ class Auto_Encoder(nn.Module):
             nn.ReLU(),
             nn.Linear(M, 64),
         )
+    def forward(self,input_bits,B,Q,alpha):
+        batch_size = input_bits.size(0)
+        x = self.encoder(input_bits)
+        x = power_constraint(x,B,Q)
+
+        indices = torch.randint(0, M, (batch_size,)).to(device)  # Shape: (batch_size,)
+        S_i = torch.nn.functional.one_hot(indices, num_classes=M).float().to(device)  # Shape: (batch_size, M)
+
+        I = torch.sum(x * S_i, dim=1, keepdim=True)
+
+        N_i = torch.randn(batch_size, 1).to(device)  # Shape: (batch_size, 1)
+        I = I + N_i
+
+        output_bits= self.decoder(I)
+        Z_i=(torch.norm(output_bits)>=alpha).float().unsqueeze(1)
+        return (output_bits,Z_i)
+
+
+def power_constraint(X_batch, B, Q):
+    power = torch.mean(torch.sum(X_batch ** 2, dim=1)) / Q
+    if power > B:
+        X_batch = X_batch * torch.sqrt(B / power)
+    return X_batch
+
 def main():
-    
+    num_bits = 1000
+
 if __name__ == '__main__':
     main()
