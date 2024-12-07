@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 #Parameters
 Q = 4
+q = 2
 M = 6
 B = 1
 samples = 1000
@@ -22,16 +23,12 @@ class Auto_Encoder(nn.Module):
         
         #Encoder
         self.encoder = nn.Sequential(
-            nn.Linear(M, 64),
-            nn.ReLU(),
-            nn.Linear(M, 64),
+            nn.Linear(1000, q),
         )
 
         #Decoder
         self.decoder = nn.Sequential(
-            nn.Linear(M, 64),
-            nn.ReLU(),
-            nn.Linear(M, 64),
+            nn.Linear(q, 1000),
         )
     def forward(self,input_bits,B,Q,alpha):
         batch_size = input_bits.size(0)
@@ -52,7 +49,7 @@ class Auto_Encoder(nn.Module):
 
 
 def power_constraint(X_batch, B, Q):
-    power = torch.mean(torch.sum(X_batch ** 2, dim=1)) / Q
+    power = torch.mean(torch.sum(X_batch ** 2, dim=1))
     if power > B:
         X_batch = X_batch * torch.sqrt(B / power)
     return X_batch
